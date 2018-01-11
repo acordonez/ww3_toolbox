@@ -13,8 +13,8 @@ def main():
     Read 6 hour u_10 and v_10 data and daily ifrac data,
     process the time dimension to respect Julian
     """
-    #data_path = '/glade/u/home/aordonez/ww3_data'
-    data_path = '/Users/aordonez/ww3_data'
+    #data_path = '/glade/u/home/qingli/ww3_data'
+    data_path = '/Users/qingli/ww3_data'
     fname_u10 = 'ncep.u_10.T62.2009.20120412.nc'
     fname_v10 = 'ncep.v_10.T62.2009.20120412.nc'
     fname_ifrac = 'ssmi.ifrac.0.5x0.5.2009.20120420.nc'

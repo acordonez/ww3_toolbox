@@ -15,6 +15,6 @@ for f in *.gif; do
 	if [ -e $f ]; then
 		rm -f ${f//gif/mp4}
 		echo "Converting ${f} to .mp4"
-		ffmpeg -r ${rf} -i $f ${f//gif/mp4}
+		ffmpeg -r ${rf} -i $f -pix_fmt yuv420p ${f//gif/mp4}
 	fi
 done

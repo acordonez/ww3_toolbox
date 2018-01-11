@@ -1,4 +1,4 @@
-#!/bin/bash
+_#!/bin/bash
 #
 # This script sets up and submits job of global WW3 simulation
 # on grid gx37, gx16(b) or ww3a on Yellowstone.
@@ -12,29 +12,26 @@ source ./share/bash_functions.sh
 ## Run control ----------------------------------------------------------------
 # case name
 gridtype="gx16b"  # grid type: gx16 or gx37 or ww3a
-casename="testcheyenne_2006_${gridtype}"
+casename="test_newcompile_2006_${gridtype}_AO"
 
 # run times
 # (nonzero hhmmss not supported)
 t_beg="20060101 000000"  # first output
-t_end="20060301 000000"  # last output
-
+t_end="20060120 000000"  # last output
 dt="21600"               # output interval
 dtrs="432000"             # restart interval
 
 # restart run or not
 f_restart="no"
 # clean old exes and build new ones
-f_new="yes"
+f_new="no"
 # update grid
-f_grid="yes"
-# input file options: core2update, core2copy, cice, none
-opt_input="cice"
+f_grid="no"
 
 # number of processors
-nproc=64
+nproc=288
 # wall time (hh:mm)
-walltime="3:00"
+walltime="12:00"
 # queue (small, regular, economy)
 queue="regular"
 # project number
@@ -46,24 +43,24 @@ case_switch_base="F90 NOGRB NOPA LRB4 NC4 PR3 UQ FLX0 LN1 ST4 BT1 DB1 MLIM "\
 case_switch_ser="${case_switch_base} SHRD"
 case_switch_mpi="${case_switch_base} MPI DIST"
 
+# specify compiler string (as per in ww3_dir/bin options) here:
+compstr="Intel"
+
 # set directory
-tmp_dir="/glade/scratch/aordonez/wwatch3v5p16"
+tmp_dir="/glade/scratch/aordonez/wwatch3v5p16_cheyenne/"
 toolbox_dir=${WW3_TOOLBOX_ROOT}
 
 # set environment
 export WWATCH3_NETCDF="NC4"
 if [[ ${HOSTNAME} == yslogin* ]]; then
-	ww3_dir="/glade/u/home/aordonez/wwatch3_v5.16"
+	ww3_dir="/glade/u/home/aordonez/wwatch3.v5.16/"
 	projnum="UWAS0039"
 	export NETCDF_CONFIG="/glade/apps/opt/netcdf/4.3.0/intel/12.1.5/bin/nc-config"
-    # specify compiler string (as per in ww3_dir/bin options) here:
-    compstr="Intel"
 elif [[ ${HOSTNAME} == cheyenne* ]]; then
-	ww3_dir="/glade/u/home/aordonez/wwatch3_v5.16_cheyenne"
+        echo "  Machine ${HOSTNAME}"
+	ww3_dir="/glade/u/home/aordonez/wwatch3.v5.16/"
 	projnum="UWAS0039"
 	export NETCDF_CONFIG="/glade/u/apps/ch/opt/netcdf/4.4.1.1/intel/16.0.3/bin/nc-config"
-    # specify compiler string (as per in ww3_dir/bin options) here:
-    compstr="Cheyenne_Intel"
 else
 	echo "Machine ${HOSTNAME} not supported. Stop."
 	exit 1
@@ -114,7 +111,6 @@ path_out="${path_work}/out"        # output directory
 path_res="${path_work}/restart"    # restart directory
 path_exe="${path_work}/exe"        # directory executables for each case
 path_input="${tmp_dir}/data"       # input data directory for copy
-path_scpt="${toolbox_dir}/bin"     # path for compiler and linker scripts
 
 # setup work directory
 mkdir -p ${path_work}
@@ -128,16 +124,16 @@ mkdir -p ${path_out}
 mkdir -p ${path_res}
 
 # setup compiler and linker script
-cp ${path_scpt}/comp.${compstr} ${path_b}/comp
-cp ${path_scpt}/link.${compstr} ${path_b}/link
+cp ${path_b}/comp.${compstr} ${path_b}/comp
+cp ${path_b}/link.${compstr} ${path_b}/link
 
 # clean old files and create new case
-#if [[ ${f_new} == yes ]]; then
-#	${path_b}/w3_clean all
-#	${path_b}/w3_new
-#	# check error
-#	check_error "Error in w3_new. Stop..."
-#fi
+if [[ ${f_new} == yes ]]; then
+	${path_b}/w3_clean all
+	${path_b}/w3_new
+	# check error
+	check_error "Error in w3_new. Stop..."
+fi
 
 
 ## 1. Grid pre-processor ------------------------------------------------------
@@ -192,7 +188,7 @@ if [[ ${f_restart} == yes ]]; then
 	fi
 else
 	echo "Starting from initial condition...Preparing..."
-	# compile appropriate code
+	# compile appropriate code 
 	echo ${case_switch_ser} > ${path_b}/switch
 	${path_b}/w3_make ww3_strt
 	# check error
@@ -210,95 +206,60 @@ fi
 
 ## 3. Input fields ------------------------------------------------------------
 # update input files
-if [[ ${opt_input} == core2update ]]; then
-	print_title "Input fields"
+print_title "Input fields"
 
-	# compile appropriate code
-	echo ${case_switch_ser} > ${path_b}/switch
-	${path_b}/w3_make ww3_prnc
-	# check error
-	check_error "Error in compiling ww3_prnc. Stop..."
-	cp ${path_e}/ww3_prnc ${path_exe}
-	path_prnc="${toolbox_dir}/data/prnc_inp"
-
-	# prepare input fields
-	# wind
-	ln -s ${path_dat}/wind.nc ./
-	cp ${path_prnc}/ww3_prnc.inp.wind ./ww3_prnc.inp
-	echo "  Screen output routed to ${path_out}/ww3_prnc_wind.out"
-	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_wind.out
-	mkdir -p prnc_inp
-	mv ww3_prnc.inp prnc_inp/ww3_prnc_wind.inp
-	rm wind.nc
-
-	# ice
-	ln -s ${path_dat}/ice.nc ./
-	cp ${path_prnc}/ww3_prnc.inp.ice ./ww3_prnc.inp
-	echo "  Screen output routed to ${path_out}/ww3_prnc_ice.out"
-	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_ice.out
-	mv ww3_prnc.inp prnc_inp/ww3_prnc_ice.inp
-	rm ice.nc
-elif [[ ${opt_input} == core2copy ]]; then
-	ln -s ${path_input}/${gridtype}_wind.ww3 ./wind.ww3
-	ln -s ${path_input}/${gridtype}_ice.ww3 ./ice.ww3
-elif [[ ${opt_input} == cice ]]; then
-	print_title "Input fields"
-
-	# compile appropriate code
-	echo ${case_switch_ser} > ${path_b}/switch
-	${path_b}/w3_make ww3_prnc
-	# check error
-	check_error "Error in compiling ww3_prnc. Stop..."
-	cp ${path_e}/ww3_prnc ${path_exe}
-	path_prnc="${toolbox_dir}/data/prnc_inp"
+# compile appropriate code 
+echo ${case_switch_ser} > ${path_b}/switch
+${path_b}/w3_make ww3_prnc
+# check error
+check_error "Error in compiling ww3_prnc. Stop..."
+cp ${path_e}/ww3_prnc ${path_exe}
+path_prnc="${toolbox_dir}/data/prnc_inp"
 	
-	# copy wind
-	#ln -s ${path_input}/${gridtype}_wind.ww3 ./wind.ww3
-	ln -s ${path_dat}/wind.nc ./wind.nc
-	cp ${path_prnc}/ww3_prnc_wind.inp ./ww3_prnc.inp
-	echo "  Screen output routed to ${path_out}/ww3_prnc_wind.out"
-	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_wind.out
-	mkdir -p prnc_inp
-	mv ww3_prnc.inp prnc_inp/ww3_prnc_wind.inp
+# copy wind
+#ln -s ${path_input}/${gridtype}_wind.ww3 ./wind.ww3
+ln -s ${path_dat}/wind.nc ./wind.nc
+cp ${path_prnc}/ww3_prnc_wind.inp ./ww3_prnc.inp
+echo "  Screen output routed to ${path_out}/ww3_prnc_wind.out"
+${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_wind.out
+mkdir -p prnc_inp
+mv ww3_prnc.inp prnc_inp/ww3_prnc_wind.inp
 	
-        # ice floe size
-	ln -s ${path_dat}/floesize.nc ./floesize.nc
-	cp ${path_prnc}/ww3_prnc_ic5.inp ./ww3_prnc.inp
-	echo "  Screen output routed to ${path_out}/ww3_prnc_ic5.out"
-	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_ic5.out
-	mv ww3_prnc.inp prnc_inp/ww3_prnc_ic5.inp
+# ice floe size
+ln -s ${path_dat}/floesize.nc ./floesize.nc
+cp ${path_prnc}/ww3_prnc_ic5.inp ./ww3_prnc.inp
+echo "  Screen output routed to ${path_out}/ww3_prnc_ic5.out"
+${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_ic5.out
+mv ww3_prnc.inp prnc_inp/ww3_prnc_ic5.inp
 
-
-	# ice fraction
-	ln -s ${path_dat}/cice.nc ./
-	cp ${path_prnc}/ww3_prnc.inp.cice.ice ./ww3_prnc.inp
-	echo "  Screen output routed to ${path_out}/ww3_prnc_cice_ice.out"
-	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_cice_ice.out
-	#mkdir -p prnc_inp
-	mv ww3_prnc.inp prnc_inp/ww3_prnc_cice_ice.inp
-
-	# ice thickness
-	cp ${path_prnc}/ww3_prnc.inp.cice.ic1 ./ww3_prnc.inp
-	echo "  Screen output routed to ${path_out}/ww3_prnc_cice_ic1.out"
-	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_cice_ic1.out
-	mv ww3_prnc.inp prnc_inp/ww3_prnc_cice_ic1.inp
-	#rm cice.nc
-
-
-        ln -s ${path_dat}/mudtest.nc ./mudtest.nc
-        cp ${path_prnc}/ww3_prnc_mudtest.inp ./ww3_prnc.inp
-	echo "  Screen output routed to ${path_out}/ww3_prnc_mdn.out"
-	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_mdn.out
-	mv ww3_prnc.inp prnc_inp/ww3_prnc_mdn.inp
-
+# ice fraction
+ln -s ${path_dat}/cice.nc ./
+cp ${path_prnc}/ww3_prnc.inp.cice.ice ./ww3_prnc.inp
+echo "  Screen output routed to ${path_out}/ww3_prnc_cice_ice.out"
+${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_cice_ice.out
+#mkdir -p prnc_inp
+mv ww3_prnc.inp prnc_inp/ww3_prnc_cice_ice.inp
 	
-elif [[ ${opt_input} == none ]]; then
-	echo "Do nothing on input file. Please make sure wind.ww3 and ice.ww3 exist."
-else
-	echo "Invalid input option ${opt_input}. Stop."
-	exit 1
-fi
+# ice thickness
+cp ${path_prnc}/ww3_prnc.inp.cice.ic1 ./ww3_prnc.inp
+echo "  Screen output routed to ${path_out}/ww3_prnc_cice_ic1.out"
+${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_cice_ic1.out
+mv ww3_prnc.inp prnc_inp/ww3_prnc_cice_ic1.inp
+#rm cice.nc
 
+
+#ln -s ${path_dat}/mudtest.nc ./mudtest.nc
+#cp ${path_prnc}/ww3_prnc_mudtest.inp ./ww3_prnc.inp
+#echo "  Screen output routed to ${path_out}/ww3_prnc_mdn.out"
+#${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_mdn.out
+#mv ww3_prnc.inp prnc_inp/ww3_prnc_mdn.inp
+
+
+#ln -s ${path_dat}/mth.nc ./mth.nc
+#cp ${path_prnc}/ww3_prnc_mth.inp ./ww3_prnc.inp
+#echo "  Screen output routed to ${path_out}/ww3_prnc_mth.out"
+#${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_mth.out
+#mv ww3_prnc.inp prnc_inp/ww3_prnc_mth.inp
 
 ## 4. Main program ------------------------------------------------------------
 print_title "Main program"
@@ -348,7 +309,6 @@ mkdir -p ounf_inp
 nnn_res=`printf %03d ${nres}`
 sav_res="restart${nnn_res}.ww3"
 rname_res="restart_${date_end}.ww3"
-
 
 ## 6. Submitting job ----------------------------------------------------------
 print_title "Submitting job"

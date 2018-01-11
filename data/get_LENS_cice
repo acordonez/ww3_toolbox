@@ -1,0 +1,53 @@
+#!/bin/bash
+# This script gets sea ice fraction and sea ice thickness from 
+# CESM CICE daily output
+#
+# Qing Li, 20170711
+
+casename=b.e11.BRCP85C5CNBDRD.f09_g16.016.cice.h1.
+datadir=/glade/p/cesm0005/CESM-CAM5-BGC-LE/ice/proc/tseries/daily
+pnum=$$
+workdir=/glade/scratch/aordonez/tmp/${pnum}
+mkdir -p ${workdir}
+yyyy=0 # year 0 in CESM lens file, corresponding to 2006
+ryyyy=2006
+yyyy_str= '20060101-21001231'
+ryyyy_str= '2006'
+# variables to extract
+vars='LON,TLAT,ULON,ULAT,ANGLE,time'
+# output directory
+outdir='.'
+# output file name
+outdata=${casename}_cice_${yyyy_str}.nc
+outdata2=cice_${ryyyy_str}.nc
+
+myvar = aice_d
+# combine northern and southern hemispheres
+infile1 = ${datadir}/${myvar}/${casename}.${myvar}_nh.${yyyy_str}.nc
+infile2 = ${datadir}/${myvar}/${casename}.${myvar}_sh.${yyyy_str}.nc
+ftmp=`basename ${infile}`
+outfile=tmp.${ftmp}
+echo ${outfile}
+ncks -O -h -v ${myvar},vars ${infile} ${workdir}/${outfile}
+
+myvar = hi_d
+# combine northern and southern hemispheres
+infile1 = ${datadir}/${casename}.${myvar}_nh.${yyyy_str}.nc
+infile2 = ${datadir}/${casename}.${myvar}_sh.${yyyy_str}.nc
+ftmp=`basename ${infile}`
+outfile=tmp.${ftmp}
+echo ${outfile}
+ncks -O -h -v ${myvar} ${infile} ${workdir}/${outfile}
+
+done
+# concatenate files
+ncrcat -O -h ${workdir}/tmp.*.nc ${outdir}/${outdata}
+
+# adjust time units and calendar (arbitrary)
+ncap2 -O -s 'time=time-time(0)+0.5' ${outdir}/${outdata} ${outdir}/${outdata2}
+ncatted -O -a units,time,o,c,"days since 2009-01-01 00:00:00" ${outdir}/${outdata2}
+ncatted -O -a calendar,time,o,c,"gregorian" ${outdir}/${outdata2}
+ncatted -O -a long_name,time,o,c,"forcing year" ${outdir}/${outdata2}
+
+# clean up
+rm -rf ${workdir}

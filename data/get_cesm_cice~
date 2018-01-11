@@ -5,7 +5,7 @@
 # Qing Li, 20170711
 
 casename=giaf_gx1_ctrl
-datadir=/glade/scratch/qingli/archive/${casename}/ice/hist
+datadir=/glade/p/work/qingli/data/${casename}
 pnum=$$
 workdir=/glade/scratch/aordonez/tmp/${pnum}
 mkdir -p ${workdir}

@@ -4,33 +4,37 @@
 #
 # Qing Li, 20170711
 
-casename=giaf_gx1_ctrl
-datadir=/glade/scratch/qingli/archive/${casename}/ice/hist
+casename=b.e11.BRCP85C5CNBDRD.f09_g16.016.cice.h1.
+datadir=/glade/p/cesm0005/CESM-CAM5-BGC-LE/ice/proc/tseries/daily
 pnum=$$
 workdir=/glade/scratch/aordonez/tmp/${pnum}
 mkdir -p ${workdir}
-yyyy=62 # year 62 under CORE II forcing, corresponding to 2009
-ryyyy=2009
-yyyy_str=`printf '%04d' ${yyyy}`
-ryyyy_str=`printf '%04d' ${ryyyy}`
+yyyy=0 # year 0 in CESM lens file, corresponding to 2006
+ryyyy=2006
+yyyy_str= '20060101-21001231'
+ryyyy_str= '2006'
 # variables to extract
-vars='aice_d,hi_d,strocnx_d,strocny_d,TLON,TLAT,ULON,ULAT,ANGLE,time'
+vars='LON,TLAT,ULON,ULAT,ANGLE,time'
 # output directory
 outdir='.'
 # output file name
 outdata=${casename}_cice_${yyyy_str}.nc
 outdata2=cice_${ryyyy_str}.nc
 
-# loop over months
-for mm in {1..12}; do
-	mm_str=`printf '%02d' ${mm}`
-	for infile in ${datadir}/${casename}.cice.h.${yyyy_str}-${mm_str}-??.nc
-	do
-		ftmp=`basename ${infile}`
-		outfile=tmp.${ftmp}
-		echo ${outfile}
-		ncks -O -h -v ${vars} ${infile} ${workdir}/${outfile}
-	done
+myvar = aice_d
+infile = ${datadir}/${myvar}/${casename}.${myvar}_nh.${yyyy_str}.nc
+ftmp=`basename ${infile}`
+outfile=tmp.${ftmp}
+echo ${outfile}
+ncks -O -h -v ${myvar},vars ${infile} ${workdir}/${outfile}
+
+myvar = hi_d
+infile = ${datadir}/${casename}.${myvar}_nh.${yyyy_str}.nc
+ftmp=`basename ${infile}`
+outfile=tmp.${ftmp}
+echo ${outfile}
+ncks -O -h -v ${myvar} ${infile} ${workdir}/${outfile}
+
 done
 # concatenate files
 ncrcat -O -h ${workdir}/tmp.*.nc ${outdir}/${outdata}

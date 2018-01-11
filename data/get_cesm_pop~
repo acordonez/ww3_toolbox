@@ -1,45 +1,46 @@
 #!/bin/bash
-# This script gets sea ice fraction and sea ice thickness from 
-# CESM CICE daily output
+# This script gets sea surface temperature, surface current, mixed layer
+# depth and boundary layer depth from CESM POP daily output
 #
-# Qing Li, 20170711
+# Qing Li, 20170725
 
 casename=giaf_gx1_ctrl
-datadir=/glade/scratch/qingli/archive/${casename}/ice/hist
+datadir=/glade/scratch/qingli/archive/${casename}/ocn/hist
 pnum=$$
-workdir=/glade/scratch/aordonez/tmp/${pnum}
+workdir=/glade/scratch/qingli/tmp/${pnum}
 mkdir -p ${workdir}
 yyyy=62 # year 62 under CORE II forcing, corresponding to 2009
 ryyyy=2009
 yyyy_str=`printf '%04d' ${yyyy}`
 ryyyy_str=`printf '%04d' ${ryyyy}`
 # variables to extract
-vars='aice_d,hi_d,strocnx_d,strocny_d,TLON,TLAT,ULON,ULAT,ANGLE,time'
+vars='HMXL_DR,HBLT,SSH,SST,UVEL,VVEL,TLONG,TLAT,ULONG,ULAT,ANGLE,time'
 # output directory
 outdir='.'
 # output file name
-outdata=${casename}_cice_${yyyy_str}.nc
-outdata2=cice_${ryyyy_str}.nc
+outdata=${casename}_pop_${yyyy_str}.nc
+outdata2=pop_${ryyyy_str}.nc
 
 # loop over months
 for mm in {1..12}; do
 	mm_str=`printf '%02d' ${mm}`
-	for infile in ${datadir}/${casename}.cice.h.${yyyy_str}-${mm_str}-??.nc
+	for infile in ${datadir}/${casename}.pop.h.${yyyy_str}-${mm_str}-??.nc
 	do
 		ftmp=`basename ${infile}`
 		outfile=tmp.${ftmp}
+		outfile2=tmp2.${ftmp}
 		echo ${outfile}
 		ncks -O -h -v ${vars} ${infile} ${workdir}/${outfile}
+		ncks -O -h -d z_t,0 ${workdir}/${outfile} ${workdir}/${outfile2}
 	done
 done
 # concatenate files
-ncrcat -O -h ${workdir}/tmp.*.nc ${outdir}/${outdata}
+ncrcat -O -h ${workdir}/tmp2.*.nc ${outdir}/${outdata}
 
 # adjust time units and calendar (arbitrary)
 ncap2 -O -s 'time=time-time(0)+0.5' ${outdir}/${outdata} ${outdir}/${outdata2}
 ncatted -O -a units,time,o,c,"days since 2009-01-01 00:00:00" ${outdir}/${outdata2}
 ncatted -O -a calendar,time,o,c,"gregorian" ${outdir}/${outdata2}
-ncatted -O -a long_name,time,o,c,"forcing year" ${outdir}/${outdata2}
 
 # clean up
 rm -rf ${workdir}

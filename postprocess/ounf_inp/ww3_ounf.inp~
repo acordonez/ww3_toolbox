@@ -1,7 +1,7 @@
 $ -------------------------------------------------------------------- $
 $ WAVEWATCH III Grid output post-processing                            $
 $--------------------------------------------------------------------- $
-$ First output time (yyyymmdd hhmmss), increment of output (s),
+$ First output time (yyyymmdd hhmmss), increment of output (s), 
 $ and number of output times.
 $
 $  20090101 000000  21600.  4
@@ -15,31 +15,31 @@ $ selection is used here (for alternative F/T flags, see ww3_shel.inp).
 $
 $ DPT CUR WND AST WLV ICE IBG D50 IC1 IC5 HS LM T02 T0M1 T01 FP DIR SPR
 $ DP HIG EF TH1M STH1M TH2M STH2M WN PHS PTP PLP PDIR PSPR PWS TWS PNR
-$ UST CHA CGE FAW TAW TWA WCC WCF WCH WCM SXY TWO BHD FOC TUS USS P2S
-$ USF P2L TWI FIC ABR UBR BED FBB TBB MSS MSC DTD FC CFX CFD CFK U1 U2
+$ UST CHA CGE FAW TAW TWA WCC WCF WCH WCM SXY TWO BHD FOC TUS USS P2S 
+$ USF P2L TWI FIC ABR UBR BED FBB TBB MSS MSC DTD FC CFX CFD CFK U1 U2 
 $
 $ N
 $ DPT HS FP T01
 $ (1) Forcing Fields
   T
 $ DPT CUR WND AST WLV ICE IBG D50 IC1 IC5
-  T   F   T   T   F   T   F   F   T   T
+  T   F   T   T   F   T   F   F   T   F
 $ (2) Standard mean wave Parameters
   T
 $ HS  LM  T02 T0M1 T01 FP DIR SPR DP
   T   T   T   T   T   T   T   T   T
 $ (3) Frequency-dependent parameters
-  T
+  F
 $ EF TH1M STH1M TH2M STH2M WN
-  T   T   T   F   F   T
+$  T   T   T   F   F   F
 $ (4) Spectral Partition Parameters
-  T
+  F
 $ PHS PTP PLP PDIR PSPR PWS TWS PNR
-  T   T   T   T   T   T   T   T
+$  T   T   T   T   T   T   T   T
 $ (5) Atmosphere-waves layer
   T
 $ UST CHA CGE FAW TAW TWA WCC WCF WCH WCM
-  T   T   T   T   T   T   T   T   T   T
+  T   F   F   F   F   F   F   F   F   F
 $ (6) Wave-Ocean layer
   T
 $ SXY TWO BHD FOC TUS USS P2S USF P2L TWI FIC
@@ -49,9 +49,9 @@ $ (7) Wave-bottom layer
 $ ABR UBR BED FBB TBB
 $  T   T   T   T   T
 $ (8) Spectrum parameters
-  T
+  F
 $ MSS MSC WL02 AXT AYT AXY
-  T   T   T   T   T   T
+$  T   T   T   T   T   T
 $ (9) Numerical diagnostics
   T
 $ DTD FC  CFX CFD CFK
@@ -64,7 +64,7 @@ $--------------------------------------------------------------------- $
 $ netCDF version [3,4]
 $        and variable type 4 [2 = SHORT, 3 = it depends , 4 = REAL]
 $ swell partitions [0 1 2 3 4 5]
-$ variables in same file [T] or not [F]
+$ variables in same file [T] or not [F] 
 $
  4 4
  0 1 2
@@ -75,7 +75,7 @@ $ File prefix
 $ number of characters in date [4(yearly),6(monthly),8(daily),10(hourly)]
 $ IX and IY ranges [regular:IX NX IY NY, unstructured:IP NP 1 1]
 $
- ww3.
+ ww3.         
  8
  1 LB_NX 1 LB_NY
 $
