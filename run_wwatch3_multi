@@ -63,18 +63,18 @@ case_switch_mpi="${case_switch_base} MPI DIST"
 compstr="Intel"
 
 # set directory
-tmp_dir="/glade/scratch/qingli/wwatch3v5p16"
+tmp_dir="/glade/scratch/aordonez/wwatch3v5p16"
 toolbox_dir=${WW3_TOOLBOX_ROOT}
 
 # set environment
 export WWATCH3_NETCDF="NC4"
 if [[ ${HOSTNAME} == yslogin* ]]; then
-	ww3_dir="/glade/u/home/qingli/wwatch3_v5.16"
-	projnum="UBRN0005"
+	ww3_dir="/glade/u/home/aordonez/wwatch3_v5.16"
+	projnum="UWAS0039"
 	export NETCDF_CONFIG="/glade/apps/opt/netcdf/4.3.0/intel/12.1.5/bin/nc-config"
 elif [[ ${HOSTNAME} == cheyenne* ]]; then
-	ww3_dir="/glade/u/home/qingli/wwatch3_v5.16_cheyenne"
-	projnum="P93300612"
+	ww3_dir="/glade/u/home/aordonez/wwatch3_v5.16_cheyenne"
+	projnum="UWAS0039"
 	export NETCDF_CONFIG="/glade/u/apps/ch/opt/netcdf/4.4.1.1/intel/16.0.3/bin/nc-config"
 else
 	echo "Machine ${HOSTNAME} not supported. Stop."

@@ -12,36 +12,36 @@ source ./share/bash_functions.sh
 ## Run control ----------------------------------------------------------------
 # case name
 gridtype="gx16b"  # grid type: gx16 or gx37 or ww3a
-casename="testIce_2009_${gridtype}"
+casename="testcheyenne_2006_${gridtype}"
 
 # run times
 # (nonzero hhmmss not supported)
-t_beg="20090101 000000"  # first output
-t_end="20100101 000000"  # last output
+t_beg="20060101 000000"  # first output
+t_end="20060301 000000"  # last output
 dt="21600"               # output interval
 dtrs="432000"             # restart interval
 
 # restart run or not
 f_restart="no"
 # clean old exes and build new ones
-f_new="no"
+f_new="yes"
 # update grid
-f_grid="no"
+f_grid="yes"
 # input file options: core2update, core2copy, cice, none
 opt_input="cice"
 
 # number of processors
 nproc=64
 # wall time (hh:mm)
-walltime="12:00"
+walltime="3:00"
 # queue (small, regular, economy)
 queue="regular"
 # project number
-#projnum="UBRN0005"
+projnum="UWAS0039"
 
 # set switch
 case_switch_base="F90 NOGRB NOPA LRB4 NC4 PR3 UQ FLX0 LN1 ST4 BT1 DB1 MLIM "\
-"NL1 TR0 BS0 IC2 IS2 REF0 XX0 WNT1 WNX1 CRT1 CRX1 O0 O1 O2 O3 O4 O5 O6 O7 O11"
+"NL1 TR0 BS0 IC4 IS2 REF0 XX0 WNT1 WNX1 CRT1 CRX1 O0 O1 O2 O3 O4 O5 O6 O7 O11"
 case_switch_ser="${case_switch_base} SHRD"
 case_switch_mpi="${case_switch_base} MPI DIST"
 
@@ -49,18 +49,18 @@ case_switch_mpi="${case_switch_base} MPI DIST"
 compstr="Intel"
 
 # set directory
-tmp_dir="/glade/scratch/qingli/wwatch3v5p16"
+tmp_dir="/glade/scratch/aordonez/wwatch3v5p16"
 toolbox_dir=${WW3_TOOLBOX_ROOT}
 
 # set environment
 export WWATCH3_NETCDF="NC4"
 if [[ ${HOSTNAME} == yslogin* ]]; then
-	ww3_dir="/glade/u/home/qingli/wwatch3_v5.16"
-	projnum="UBRN0005"
+	ww3_dir="/glade/u/home/aordonez/wwatch3_v5.16"
+	projnum="UWAS0039"
 	export NETCDF_CONFIG="/glade/apps/opt/netcdf/4.3.0/intel/12.1.5/bin/nc-config"
 elif [[ ${HOSTNAME} == cheyenne* ]]; then
-	ww3_dir="/glade/u/home/qingli/wwatch3_v5.16_cheyenne"
-	projnum="P93300612"
+	ww3_dir="/glade/u/home/aordonez/wwatch3_v5.16_cheyenne"
+	projnum="UWAS0039"
 	export NETCDF_CONFIG="/glade/u/apps/ch/opt/netcdf/4.4.1.1/intel/16.0.3/bin/nc-config"
 else
 	echo "Machine ${HOSTNAME} not supported. Stop."
@@ -129,18 +129,19 @@ cp ${path_b}/comp.${compstr} ${path_b}/comp
 cp ${path_b}/link.${compstr} ${path_b}/link
 
 # clean old files and create new case
-if [[ ${f_new} == yes ]]; then
-	${path_b}/w3_clean all
-	${path_b}/w3_new
-	# check error
-	check_error "Error in w3_new. Stop..."
-fi
+#if [[ ${f_new} == yes ]]; then
+#	${path_b}/w3_clean all
+#	${path_b}/w3_new
+#	# check error
+#	check_error "Error in w3_new. Stop..."
+#fi
 
 
 ## 1. Grid pre-processor ------------------------------------------------------
 if [[ ${f_grid} == yes ]]; then
 	print_title "Grid preprocessor"
 
+        pwd
 	# compile appropriate code
 	echo ${case_switch_ser} > ${path_b}/switch
 	${path_b}/w3_make ww3_grid
@@ -249,14 +250,27 @@ elif [[ ${opt_input} == cice ]]; then
 	path_prnc="${toolbox_dir}/data/prnc_inp"
 	
 	# copy wind
-	ln -s ${path_input}/${gridtype}_wind.ww3 ./wind.ww3
+	#ln -s ${path_input}/${gridtype}_wind.ww3 ./wind.ww3
+	ln -s ${path_dat}/wind.nc ./wind.nc
+	cp ${path_prnc}/ww3_prnc_wind.inp ./ww3_prnc.inp
+	echo "  Screen output routed to ${path_out}/ww3_prnc_wind.out"
+	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_wind.out
+	mkdir -p prnc_inp
+	mv ww3_prnc.inp prnc_inp/ww3_prnc_wind.inp
 	
+        # ice floe size
+	ln -s ${path_dat}/floesize.nc ./floesize.nc
+	cp ${path_prnc}/ww3_prnc_ic5.inp ./ww3_prnc.inp
+	echo "  Screen output routed to ${path_out}/ww3_prnc_ic5.out"
+	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_ic5.out
+	mv ww3_prnc.inp prnc_inp/ww3_prnc_ic5.inp
+
 	# ice fraction
 	ln -s ${path_dat}/cice.nc ./
 	cp ${path_prnc}/ww3_prnc.inp.cice.ice ./ww3_prnc.inp
 	echo "  Screen output routed to ${path_out}/ww3_prnc_cice_ice.out"
 	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_cice_ice.out
-	mkdir -p prnc_inp
+	#mkdir -p prnc_inp
 	mv ww3_prnc.inp prnc_inp/ww3_prnc_cice_ice.inp
 	
 	# ice thickness
@@ -264,7 +278,16 @@ elif [[ ${opt_input} == cice ]]; then
 	echo "  Screen output routed to ${path_out}/ww3_prnc_cice_ic1.out"
 	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_cice_ic1.out
 	mv ww3_prnc.inp prnc_inp/ww3_prnc_cice_ic1.inp
-	rm cice.nc
+	#rm cice.nc
+
+
+        ln -s ${path_dat}/mudtest.nc ./mudtest.nc
+        cp ${path_prnc}/ww3_prnc_mudtest.inp ./ww3_prnc.inp
+	echo "  Screen output routed to ${path_out}/ww3_prnc_mdn.out"
+	${path_exe}/ww3_prnc > ${path_out}/ww3_prnc_mdn.out
+	mv ww3_prnc.inp prnc_inp/ww3_prnc_mdn.inp
+
+	
 elif [[ ${opt_input} == none ]]; then
 	echo "Do nothing on input file. Please make sure wind.ww3 and ice.ww3 exist."
 else

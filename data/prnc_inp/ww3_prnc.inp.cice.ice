@@ -28,13 +28,13 @@ $   Header flag  : If true, header is added to file.
 $                  (necessary for reading, FALSE is used only for
 $                   incremental generation of a data file.)
 $
-  'ICE' 'LL' T T
+  'ICE' 'AI' T T
 $
 $ Name of spatial dimensions------------------------------------------ $
 $ NB: time dimension is expected to be called 'time' and must respect 
 $     Julian or Gregorian calendar with leap day.
 $
- lon lat
+ nj ni
 $
 $ Variables to use --------------------------------------------------- $
 $
