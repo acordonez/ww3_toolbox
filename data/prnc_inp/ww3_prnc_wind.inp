@@ -38,7 +38,7 @@ $
 $
 $ Variables to use --------------------------------------------------- $
 $
-  u_10 v_10
+  UBOT VBOT
 $
 $ Additional time input ---------------------------------------------- $
 $ If time flag is .FALSE., give time of field in yyyymmdd hhmmss format.
