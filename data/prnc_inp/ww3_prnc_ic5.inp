@@ -28,17 +28,17 @@ $   Header flag  : If true, header is added to file.
 $                  (necessary for reading, FALSE is used only for
 $                   incremental generation of a data file.)
 $
-  'IC1' 'AI' T T
+  'IC5' 'AI' T T
 $
 $ Name of spatial dimensions------------------------------------------ $
 $ NB: time dimension is expected to be called 'time' and must respect 
 $     Julian or Gregorian calendar with leap day.
 $
- nj ni
+  nj ni
 $
 $ Variables to use --------------------------------------------------- $
 $
-  hi
+  floe
 $
 $ Additional time input ---------------------------------------------- $
 $ If time flag is .FALSE., give time of field in yyyymmdd hhmmss format.
@@ -48,7 +48,7 @@ $
 $ Define data files -------------------------------------------------- $
 $ The input line identifies the filename using for the forcing field.
 $
-  'cice.nc'
+  'floesize.nc'
 $
 $ -------------------------------------------------------------------- $
 $ End of input file                                                    $
